@@ -3,9 +3,9 @@
 use strict;
 
 #
-# Title:		Atheria Markup Language Interpreter/Translator (AML)
-# Author: 	Cameron "Mercutio" McKay
-# Version:	0.1.0
+# Title:       Atheria Markup Language Interpreter/Translator (AML)
+# Author:      Cameron "Mercutio" McKay
+# Version:     0.1.1
 #
 # Purpose:
 #
@@ -16,27 +16,54 @@ use strict;
 #
 
 #
-# This chunck of code determines what type of file the arguments are and sends them to their translator. 
+# This chunck of code determines what type of file the arguments are and sends them to their translator.
 #
 
-my ($debug) = 0;
+my ($aml_version) = '0.1.1';
+print "\nAtheria Markup Language (AML) Translator/Interpreter\n",
+	 "Version $aml_version\n",
+	 "Copyright (c) Cameron McKay, 2000.\n\n";
 
-my ($fileType, $fileName);
+
+my ($fileType, $newFileType, $fileName, $fileDir, $fileHold, $whereHold);
+
+unless (@ARGV) {
+	die "Error: Received no arguments.\n\n";
+}
 
 foreach (@ARGV) {
-	$fileName = shift(@ARGV);
-	$fileType = (split /\./,$fileName)[1];
+     $fileHold = shift(@ARGV);
 
-	if ($debug >= 3) {
-		print "fileName = $fileName\n";
-		print "fileType = $fileType\n";
+	if ($fileHold =~ /\//) { 
+		$fileName  = (split /\//,$fileHold)[-1];
+     	$whereHold = rindex($fileHold,'\/');
+     	$fileDir   = substr($fileHold, 0, $whereHold);
+	} else {
+		$fileName  = $fileHold;
+		$fileDir	 = '';
 	}
 
-	translate_rml($fileType,$fileName) if $fileType eq 'rml';
-#	translate_mml($fileType,$fileName) if $fileType eq 'mml';
-#	translate_oml($fileType,$fileName) if $fileType eq 'oml';
-#	translate_sml($fileType,$fileName) if $fileType eq 'sml';
-#	translate_zml($fileType,$fileName) if $fileType eq 'zml'; 
+	$fileType = (split /\./,$fileName)[1];
+
+     $newFileType = 'wld' if $fileType eq 'rml';
+     $newFileType = 'mob' if $fileType eq 'mml';
+     $newFileType = 'obj' if $fileType eq 'oml';
+     $newFileType = 'shp' if $fileType eq 'sml';
+     $newFileType = 'zon' if $fileType eq 'zml';
+
+
+	print "File Name...        $fileName\n",
+		 "Old Extension...    $fileType\n",
+		 "New Extension...    $newFileType\n",
+		 "Source Directory... ";
+	unless ($fileDir) {
+		print "CURRENT\n";
+	} else {
+		print "$fileDir\n";	
+	}
+		print "Target Directory... \n";
+
+     main_translate($fileType,$fileName,$newFileType);
 }
 
 
@@ -44,110 +71,326 @@ foreach (@ARGV) {
 # Sub-Routine Section
 #
 
-sub translate_rml {
-	my ($fileType,$fileName) = @_;
-	my (@RML, $line);
+#
+# Main Translation
+#
+# this is the main translation routine, which collects the tags and then
+# forwards them to their specific sub to process and print them
+#
 
-	my %DIR = qw(	NORTH 	=>	0
-			 	EAST		=>	1	
-			 	SOUTH	=>	2
-			 	WEST		=>	3
-			 	UP		=>	4
-			 	DOWN		=>	5
-			);
+sub main_translate {
+	my ($fileType,$fileName,$newFileType) = @_;
+	my (@AML,@sortedkeys);
 
-	my (%Tag,%subTag);
+	open(AML,$fileName) || die "Error: can't open $fileName: $!";
 
-	my ($tempHold1, 	$tempHold2);
-	my ($zoneNum,		$zoneTag);
-	my ($virtNum,		$virtTag);
-	my ($dirValue,		$dirTag);
+     while(<AML>) {
+		chomp;	push (@AML,$_);
+     }
 
-	open(RML,$fileName) || die "can't open $fileName: $!";
+	close(AML);
 
-	while(<RML>) {
-		chomp;
-		push (@RML,$_);
+#
+# First the room file is scanned and split into chunks.  One chunck for each virtual up to 99.
+#
+     my (%fileChunk,%chunkIndex,%tagValue);
+     my ($fileCount) = 0;
+     my ($zoneNum,$chunkNum,$Chunk1,$Chunk2,$line,$key);
+
+	$AML[0] =~ /^<ZONE\s(\d+)>/i;
+	$zoneNum = $1;
+
+	print "Zone Number... $zoneNum\n";
+
+	print "Determining Chunks...\n";	
+
+     foreach $line (@AML) {
+		$fileCount++;
+          if ($line =~ /^<VIRTUAL\s(\d+)>/i) {
+			$chunkNum = $1;
+               $Chunk1 = $fileCount;
+			next;
+          }
+          if ($line =~ /^<\/VIRTUAL>/i) {
+               $Chunk2 = $fileCount-2;
+               $fileChunk{$Chunk1}  = $Chunk2;
+			$chunkIndex{$Chunk1} = $chunkNum;
+          }
 	}
 
-	if ($debug >= 3) {
-		foreach (@RML) {
-			print "$_\n";
-		} 	
+	print "Listing Chunks...\n";
+
+	@sortedkeys = sort by_number keys(%fileChunk);					# the keys are sorted (so the chunks will write
+															# in order
+	foreach (@sortedkeys) {
+		print "Virtual $chunkIndex{$_}... $_ to $fileChunk{$_}\n";
 	}
 
-	foreach $line (@RML) {
+	print "New File Name... $zoneNum.$newFileType\n";	
 
-	my ($tempHold1, $tempHold2) = '';
+	print "Opening $zoneNum.$newFileType for writing... ";
+	open (CAM,">$zoneNum.$newFileType") || die "Failed: $!";
+	print "Done.\n";
 
-#
-# If it equals a <word digit> combo then it can only be type ZONE or type VIRTUAL.
-# Therefore we only look for those types.
-#
-# It also checks if either tags are set more than once.  If they are, then it dies
-# with an error telling the user to only declare zone once.
-#
-		if ($line =~ /^<(\w+)\s(\d+)>/) {
-			($tempHold1,$tempHold2) = ($1, $2);
-
-			if (!$zoneTag && $tempHold1 =~ /\bZONE\b/i) {
-				$zoneNum = $tempHold2;
-				$zoneTag++;
-				next;
-			} elsif ($zoneTag > 1) {
-				die "Error: <ZONE> tag set more than once.\n";
-			}
-
-			if (!$virtTag && $tempHold1 =~ /\bVIRTUAL\b/i) {
-				$virtNum = $tempHold2;
-				$virtTag++;
-				next;
-			} elsif ($virtTag > 1) {
-				die "Error: <VIRTUAL> tag must be closed before another is opened.\n";
-			}		
-#
-# If it equals a <word word> combo then it can only be type DIR... but written this way
-# for future tags.
-#
-		} elsif ($line =~ /^<(\w+)\s(\w+)>/) {
-			($tempHold1,$tempHold2) = ($1, $2);
-
-			if (!$dirTag && $tempHold1 =~ /\bDIR\b/i) {
-				$dirValue = $tempHold2;
-				$dirTag++;
-				unless ($dirValue =~ /(NORTH|EAST|SOUTH|WEST|UP|DOWN)/ || $dirValue =~ /(0|1|2|3|4|5)/) {
-					die "Error: Invald <DIR> value.\n";
-				}
-			} elsif ($dirTag > 1) {
-					die "Error: Opened a new <DIR> tag before closing the old one.";
-			}	
-#
-# Ok, now for more extenisve <word> ones.  First we see if the tag ending is on the same line.
-# If it is, it makes this a whole lot easier.
-#
-		} elsif ($line =~ /<(\w+)>/) {
-			die "Error: <VIRTUAL> and <ZONE> tag must be set before any word tags." unless $virtTag && $zoneTag;
-			($tempHold1) = $1;
-
-			if ($line =~ /<\/$tempHold1>/) {
-				$line =~ s/<$tempHold1>//;
-				$line =~ s/<\/$tempHold1>//;
-				$line =~ s/^\s+//; $line =~ s/\s+$//; 
-				$Tag{$tempHold1} = $line;
-			}
-		}
-
+	foreach $key (@sortedkeys) {
+		%tagValue = tag_translate($key,$fileChunk{$key},@AML);
+	     rml_translate($chunkIndex{$key},$zoneNum,%tagValue) if $fileType eq 'rml';
+	}	
+	print "Adding terminator... ";
+	if ($fileType eq 'rml' || $fileType eq 'sml') {
+		print CAM '$~';
+		print "\$~\n";
+	} else {
+		print CAM '$';
+		print "\$\n";
 	}
+	print "Closing $zoneNum.$newFileType... ";
+	
+	close (CAM) || die "Failed: $!";
+	print "Done.\n\n";
 
-#
-# This is an information dump... it will be removed shortly.
-#
-
-print "Zone: $zoneNum\n";
-print "Virtual Number: $zoneNum$virtNum\n";
-
-foreach (keys %Tag) {
-	print "$_ = $Tag{$_}\n";
 }
 
+#
+# specific interpretation
+#
+
+sub rml_translate {
+	my ($virtNum,$zoneNum,%tagValue) = @_;
+	my ($tempString,$tempString2,@tempArray,@tempArray2);
+	my (@DIR,@EXTRA,%tagDir,%tagExtra);
+
+	my (%BIT) = qw(DARK				a		NOTRACK        	g
+				DEATH			b		NOMAGIC           	h
+				NOMOB			c		TUNNEL            	i	
+				INDOORS			d		PRIVATE           	j
+				PEACEFUL			e		GODROOM           	k
+				SOUNDPROOF		f
+
+				HOUSE			l
+				HOUSE_CRASH		m
+				ATRIUM			n
+				OLC				o
+				BFS_MARK			p);
+
+	my (%SEC)	= qw(INSIDE			0		MOUNTAIN			5		
+				CITY				1		WATER_SWIM		6
+				FIELD			2		WATER_NOSWIM		7
+				FOREST			3		UNDERWATER      	8
+				HILLS			4		FLYING      		9);
+
+	my (%DIR)	= qw(N				0
+				E				1
+				S				2
+				W				3
+				U				4
+				D				5);
+
+	my (%DOORFLAG) = qw(NONE 		0
+					NORM			1
+					PICKPROOF		2);
+
+	my (%KEYNUM)	= qw(KEYLESS		-1
+					NONE			0);
+				
+	print CAM "\#$zoneNum$virtNum\n";				# write the virtual number (i.e. 1204)
+
+	$tempString = clean_string($tagValue{'NAME'});	# clean out the spaces in name and write it
+	print CAM "$tempString~\n";					# it must be one line, so assume it is after cleaning
+
+	$tempString = clean_string($tagValue{'DESC'});	# clean out the spaces in DESC
+	if ($tempString =~ /~~~/) {					# check if it is multi-line,
+		@tempArray = split(/~~~/,$tempString);		# ...it is, split it up,
+		foreach (@tempArray) {					
+			print CAM "$_\n";					# ...write it
+		}
+	} else {									# otherwise it's one line,
+		print CAM "$tempString\n";				# so write it
+	}
+	print CAM "~\n";							# for format purposes
+
+	$tempString = clean_string($tagValue{'BIT'});
+	if ($tempString =~ /[A-Z]/) {
+		if ($tempString =~ /\s/) {
+			@tempArray = split (/ /,$tempString);
+			foreach (@tempArray) {
+				$_ = $BIT{$_}; 
+				push(@tempArray2,$_);
+			}
+			@tempArray = sort by_string (@tempArray2);
+			$tempString = join ('',@tempArray);
+		} else {
+			$tempString = $BIT{$tempString};
+		}
+	} 
+	print CAM "$zoneNum $tempString ";
+
+	$tempString = clean_string($tagValue{'TYPE'});
+     if ($tempString =~ /[A-Z]/) {
+		$tempString = $SEC{$tempString};
+	}
+	print CAM "$tempString\n";	
+
+	foreach (keys %tagValue) {
+		if ($_ =~ /DIR (\d|\w)/) {
+			$tempString = $1;
+			if ($tempString =~ /\w/) {
+				$tempString = $DIR{$tempString};
+			}
+			print CAM "D$tempString\n";
+
+			$tagValue{$_} = clean_string($tagValue{$_});
+			@DIR = split (/~~~/,$tagValue{$_});
+			%tagDir = tag_translate(0,scalar(@DIR)-1,@DIR);	
+
+			$tempString = clean_string($tagDir{'DESC'});		# for DIR DESC
+			if ($tempString =~ /~~~/) {                       # check if it is multi-line,
+          		@tempArray = split(/~~~/,$tempString);       # ...it is, split it up,
+          		foreach (@tempArray) {
+               		print CAM "$_\n";                       # ...write it
+          		}
+     		} else {                                          # otherwise it's one line,
+          		print CAM "$tempString\n";                   # so write it
+     		}
+     		print CAM "~\n";                                  # for format purposes
+
+			$tempString = clean_string($tagDir{'KEYWORDS'});	# for KEYWORDS 
+			if ($tempString eq 'NONE') {
+				$tempString = '';
+			}	
+			print CAM "$tempString~\n";
+			
+			$tempString = clean_string($tagDir{'DOORFLAG'});	# for DOORFLAG
+			if ($tempString =~ /[A-Z]/) {
+ 		         $tempString = $DOORFLAG{$tempString};
+     		}
+     		print CAM "$tempString ";
+
+			$tempString = clean_string($tagDir{'KEYNUM'});	# for KEYNUM
+			if ($tempString =~ /[A-Z]/) {
+                   $tempString = $KEYNUM{$tempString};
+               }
+               print CAM "$tempString ";
+
+			$tempString = clean_string($tagDir{'LINK'});		# for LINK
+			print CAM "$tempString\n";
+
+		} elsif ($_ =~ /EXTRA (\d|\w)/) {
+
+			print CAM "E\n";
+			$tagValue{$_} = clean_string($tagValue{$_});
+               @EXTRA = split (/~~~/,$tagValue{$_});
+               %tagExtra = tag_translate(0,scalar(@EXTRA)-1,@EXTRA);
+
+			$tempString = clean_string($tagExtra{'KEYWORDS'});  # for KEYWORDS
+               print CAM "$tempString~\n";
+
+			$tempString = clean_string($tagExtra{'DESC'});      # for DIR DESC
+               if ($tempString =~ /~~~/) {                       # check if it is multi-line,
+                    @tempArray = split(/~~~/,$tempString);       # ...it is, split it up,
+                    foreach (@tempArray) {
+                         print CAM "$_\n";                       # ...write it
+                    }
+               } else {                                          # otherwise it's one line,
+                    print CAM "$tempString\n";                   # so write it
+               }
+               print CAM "~\n";                                  # for format purposes
+
+		}
+	}
+	print CAM "S\n";		
+	
+}	
+
+#
+# collects the Tags and stores them in a hash.
+#
+
+sub tag_translate {
+	my ($startLine,$endLine,@AML) = @_;
+	my ($holdValue,$holdValue2,$lineCheck1,$lineCheck2);
+	my ($whatEver,$startRecord,$i);
+	my (%tagValue);
+	my ($line,@line);
+
+	for $i ($startLine..$endLine) {
+	
+	($lineCheck1,$lineCheck2) = ('foo','bar');
+	$line = $AML[$i];                            # moving AML line to $line for simplicity
+
+	next if $line =~ /^\s*$/;
+
+	if ($line =~ /^<(\w+)>/) {
+		$holdValue = $1;
+		$line =~ s/<$holdValue>//;              # erase the opening tag
+		$lineCheck1 = $line;                    # (1) make a copy of line
+		$startRecord++;                         # start recording
+	} elsif ($line =~ /^<(\w+)\s(\w+|\d+)>/) {
+		$holdValue = $1; $holdValue2 = $2;
+		$line =~ s/<$holdValue\s$holdValue2>//;
+		$startRecord++;
+	}
+#
+# Now we keep adding the values into a string (minus tags, leading and trailing spaces) until we
+# see the end tag.
+#
+     if ($line =~ /<\/$holdValue>/) {
+          $lineCheck2 = $line;                    # (2) make a copy of untouched line
+          $line =~ s/<\/$holdValue>//;            # erase the ending tag
+          $startRecord--;                         # stop recording
+     }
+
+     if ($lineCheck1 eq $lineCheck2) {                 # (3) check and see if they're the same
+          $tagValue{$holdValue} = $line;               # if they are then they open and close on the same line
+
+     } elsif ($startRecord && $line !~ /^\s*$/) {      # if it's still recording, push it into an array
+          push(@line,$line);                           # like so
+
+     } elsif (!$startRecord) {
+          push(@line,$line);                           # if it's no longer recording, push the last piece in and
+          $whatEver = join('~~~',@line);               # record it to the hash
+          if ($holdValue2) {
+	          $holdValue = $holdValue . ' ' . $holdValue2;
+    		     $holdValue2 = 0;
+          }
+     $tagValue{$holdValue} = $whatEver;
+               @line = '';
+          }
+     }
+
+#     foreach (keys %tagValue) {
+#          print "$_ = $tagValue{$_}\n";
+#     }
+	
+	return %tagValue;
+}
+
+sub clean_string {
+	my ($dirtyString) = @_;
+	my ($cleanString, @dirtyArray, @cleanArray);
+	
+	if ($dirtyString =~ /^\s+$/) {
+		print "Removing an empty string...\n";
+	} elsif ($dirtyString =~ /~~~/) {
+		@dirtyArray = split (/~~~/,$dirtyString);
+		foreach (@dirtyArray) {
+			s/^\s+//; s/\s+$//;
+			push(@cleanArray,$_);
+		}
+		$cleanString = join('~~~',@cleanArray);
+	} else {
+		$dirtyString =~ s/^\s+//; 
+		$dirtyString =~ s/\s+$//; 
+		$cleanString = $dirtyString;
+	}
+	
+	return $cleanString;
+}
+
+sub by_number {
+	return $a <=> $b;
+}
+
+sub by_string {
+	return $a cmp $b;
 }
