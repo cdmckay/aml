@@ -1,0 +1,22 @@
+
+#
+# Program:	Atheria Markup Language
+# Version:	0.1.1
+#
+
+Well... I guess the first step is done.  AML 0.1.1 has support for .rml -> .wld ... but I got to
+a hell've a lot more tests before I know the structure works everyway.
+
+I got to:
+
+1)	clean up code (replace repetitve code with sub-routines)
+2)	test structure deviations
+3)	write a quick tag checker, that verifies all tags open and close before
+	it translate the code... it will save time and help newbies
+4)	write a reverse translator (to convert old files) ... it would know whether or not
+	to reverse translate based on filetype (i.e. .wld -> .rml)... the structure will
+	be very rigid Standard AML Sturcutre (SAS).  SAS should be the standard way to
+	trade AML files.  syntax to standardize files is aml --standard <file1> <file2> ...
+	if the file is already AML, then it will convert it to its Circle equiv. and then 
+	switch it back, making it SAS compliant.
+5)	write translators for .mml .oml .sml .zml

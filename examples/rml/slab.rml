@@ -1,0 +1,56 @@
+<ZONE 12>
+
+<VIRTUAL 04>
+<NAME> Floating Slab </NAME>
+<DESC>
+You appear to be in the middle of a floating slab of smooth,
+flat rock. You feel cold winds blow into your face and watch clouds move
+slowly overhead. Down below, partially covered by clouds, is a reasonably
+large city; many peasants can be seen wandering in its streets.
+</DESC>
+<BIT> NOMOB GODROOM </BIT>
+<TYPE> INSIDE </TYPE>
+<DIR D>
+	<LINK> 1000 </LINK>
+	<DESC> You see a statue of some important figure below you. </DESC>
+	<KEYWORDS> NONE </KEYWORDS>
+	<DOORFLAG> NONE </DOORFLAG> 
+	<KEYNUM> NONE </KEYNUM>
+</DIR>
+<DIR U>
+	<LINK> 1001 </LINK>
+	<DESC> The sky goes higher and higher. </DESC>
+	<KEYWORDS> NONE </KEYWORDS>
+	<DOORFLAG> NONE </DOORFLAG>
+	<KEYNUM> NONE </KEYNUM>
+</DIR>
+<EXTRA 0>
+	<KEYWORDS> sky cloud clouds </KEYWORDS>
+	<DESC> The sky swirls with beautiful clouds. </DESC>
+</EXTRA>
+<EXTRA 1>
+	<KEYWORDS> ground </KEYWORDS>
+	<DESC> The ground is pretty clean. </DESC>
+</EXTRA>
+</VIRTUAL>
+
+<VIRTUAL 05>
+<NAME> Floating Slab </NAME>
+<DESC>
+You appear to be in the middle of a floating slab of smooth,
+flat rock. You feel cold winds blow into your face and watch clouds move
+slowly overhead. Down below, partially covered by clouds, is a reasonably
+large city; many peasants can be seen wandering in its streets.
+</DESC>
+<BIT> NOMOB </BIT>
+<TYPE> INSIDE </TYPE>
+<DIR N>
+     <LINK> 1000 </LINK>
+     <DESC> You see a statue of some important figure below you. </DESC>
+     <KEYWORDS> NONE </KEYWORDS>
+     <DOORFLAG> NONE </DOORFLAG>
+     <KEYNUM> NONE </KEYNUM>
+</DIR>
+</VIRTUAL>
+
+</ZONE>

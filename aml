@@ -5,7 +5,7 @@ use strict;
 #
 # Title:       Atheria Markup Language Interpreter/Translator (AML)
 # Author:      Cameron "Mercutio" McKay
-# Version:     0.1.1
+# Version:     0.1.2
 #
 # Purpose:
 #
@@ -19,7 +19,7 @@ use strict;
 # This chunck of code determines what type of file the arguments are and sends them to their translator.
 #
 
-my ($aml_version) = '0.1.1';
+my ($aml_version) = '0.1.2';
 print "\nAtheria Markup Language (AML) Translator/Interpreter\n",
 	 "Version $aml_version\n",
 	 "Copyright (c) Cameron McKay, 2000.\n\n";
@@ -27,11 +27,7 @@ print "\nAtheria Markup Language (AML) Translator/Interpreter\n",
 
 my ($fileType, $newFileType, $fileName, $fileDir, $fileHold, $whereHold);
 
-unless (@ARGV) {
-	die "Error: Received no arguments.\n\n";
-}
-
-foreach (@ARGV) {
+while (@ARGV) {
      $fileHold = shift(@ARGV);
 
 	if ($fileHold =~ /\//) { 
@@ -52,9 +48,9 @@ foreach (@ARGV) {
      $newFileType = 'zon' if $fileType eq 'zml';
 
 
-	print "File Name...        $fileName\n",
-		 "Old Extension...    $fileType\n",
-		 "New Extension...    $newFileType\n",
+	print "File Name...$fileName			[DONE]\n",
+		 "Old Extension...$fileType		[DONE]\n",
+		 "New Extension...$newFileType	[DONE]\n",
 		 "Source Directory... ";
 	unless ($fileDir) {
 		print "CURRENT\n";
@@ -65,6 +61,8 @@ foreach (@ARGV) {
 
      main_translate($fileType,$fileName,$newFileType);
 }
+
+print "All the arguments have been processed.\n\n";
 
 
 #
