@@ -1,0 +1,10 @@
+<xml>
+
+<room vnum="1000">
+	<name>Floating Slab</name>
+	<description>
+	You are on a floating, marble slab.  It appears to be flying over an immense world full of ant-like entities.
+	</description>
+	<bitvector value="k" />
+	<sector type="9" />
+	<direction 

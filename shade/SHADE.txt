@@ -1,0 +1,47 @@
+SHADE Design Documentation
+
+SHADE is a PERL CGI program, written using CGI.pm.
+
+SHADE's main page will be a SHADE graphic and then a list of options.  Those options will be links to different parts of SHADEs creation engine.  They are as follows:
+
+BASIC COMMANDS:
+1) Choose Existing Zone.
+
+ADMIN COMMANDS:
+2) Zone Management
+
+-- Further explanation of Starting Commands:
+
+1) Choose Existing Zone.
+This command will select a already created zone.
+You choose your zone from a list.  Zones may be password protected.
+
+2) Zone Management
+Load Menu --> 	Zone Managment
+		1) Create a Zone.
+		2) Delete a Zone.
+		3) Export a Zone.
+		4) Import a Zone.
+
+-- Further explanation of Zone Management Commands:
+
+1) Create a Zone.
+Asks for all the things specified in the building.txt file for zone.
+
+2) Delete a Zone.
+Will tell user that zones can only be deleted manually.
+
+3) Export a Zone. 
+Will zip up the zone files (.wld, .mob, etc) and send them to the user.
+
+4) Import a Zone.
+Will warn the user that this would be a major security problem if it
+was a command.  Must be done manually.
+
+ONCE A ZONE IS (CREATED AND) CHOSEN:
+
+1)	Room Manipulation
+2)	Object Manipulation
+3)	Mobile Manipulation
+4)	Shop Manipulation
+
