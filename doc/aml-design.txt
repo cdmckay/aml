@@ -1,0 +1,91 @@
+five different file types:
+1) .rml = rooms
+2) .mml = mobs
+3) .oml = objects
+4) .sml = shops
+5) .zml = zones
+
+the interpreter is "aml" which converts the following:
+1) .rml	-> .wld
+2) .mml -> .mob
+3) .oml -> .obj
+4) .sml -> .shp
+5) .zml -> .zon
+
+the syntax will be like this, if the .zml was called newcountry.zml and the zone number was 57...
+
+aml newcountry.zml
+
+which would turn newcountry.zml into 57.zon, with the .zml perserved
+
+for multiple files, all called newcountry except different types it would be
+
+aml newcountry.zml newcountry.rml
+
+arguments will be developed as the project progresses
+
+the interpreter will make the format compatible with atheria... whatever changes are done to atheria with respect to the format is done to the interpreter, therefore there is no guarentee that it will always be compatible with circlemud
+
+format:
+
+ROOMS
+
+<ZONE num> (only at the top, this is extremely important)
+
+<VIRTUAL num>
+<NAME> name </NAME>
+<DESC>
+description
+</DESC>
+<BIT> bitvector OR words </BIT>
+<TYPE> num OR word </TYPE>
+<DIR direction or direction number>
+	<LINK> room number or NONE </LINK>
+	<DESC>
+	description
+	</DESC>
+	<KEYWORDS> keyword list </KEYWORDS>
+	<DOORFLAG> num or value </DOORFLAG> 
+	<KEYNUM> key number or NONE or KEYLESS </KEYNUM>
+</DIR>
+<EXTRA>
+	<KEYWORDS> keyword list </KEYWORDS>
+	<DESC>
+	description
+	</DESC>
+</EXTRA>
+</VIRTUAL>
+
+</ZONE> (only at the bottom of the file)
+
+real world example:
+
+<ZONE 57> (very beginning of .rml file)
+
+<VIRTUAL 00>
+<NAME> The Floating Slab </NAME>
+<DESC>
+You find yourself standing on a floating slab.  Below you the ant-like people walk
+around doing their duties.
+</DESC>
+<BIT> DARK MOB </BIT>
+<TYPE> FLYING </TYPE>
+<DIR D>
+	<LINK> 5701 </LINK>
+	<DESC>
+	Below you is a large statue of some sort of deity.
+	</DESC>
+	<KEYWORDS> NONE </KEYWORDS>
+	<DOORFLAG> NONE </DOORFLAG>
+	<KEYNUM> 0 </KEYNUM>
+</DIR>
+<EXTRA 0>
+	<KEYWORDS> sky above </KEYWORDS>
+	<DESC> The sky above swirls with the beauty of the gods. </DESC>
+</EXTRA>
+</VIRTUAL>
+
+</ZONE> (very end of .rml file)
+	
+
+	
